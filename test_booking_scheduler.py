@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from schedule import Customer, Schedule
 from communication import SmsSender, MailSender
 from booking_scheduler import BookingScheduler
+from sender_double import MockSmsSender
 
 UNDER_CAPACITY = 1
 CAPACITY_PER_HOUR = 3
@@ -14,6 +15,13 @@ CUSTOMER = Customer('MR', '123-1234', 'abc@email.com')
 @pytest.fixture
 def booking_scheduler():
     return BookingScheduler(CAPACITY_PER_HOUR)
+
+@pytest.fixture
+def booking_scheduler_with_mock_sender():
+    scheduler = BookingScheduler(CAPACITY_PER_HOUR)
+    sender = MockSmsSender()
+    scheduler.set_sms_sender(sender)
+    return scheduler, sender
 
 def test_예약은_정시에만_가능하다_정시가_아닌경우_예약불가(booking_scheduler):
     schedule = Schedule(NOT_ON_THE_HOUR, UNDER_CAPACITY, CUSTOMER)
@@ -44,12 +52,29 @@ def test_시간대별_인원제한이_있다_같은_시간대가_다르면_Capac
     assert booking_scheduler.has_schedule(schedule)
 
 
-def test_예약완료시_SMS는_무조건_발송():
-    pass
+def test_예약완료시_SMS는_무조건_발송(mocker, booking_scheduler):
+    orig_sender = booking_scheduler.sms_sender
+    mock_sender = mocker.Mock(spec=SmsSender)
+    booking_scheduler.set_sms_sender(mock_sender)
+    schedule = Schedule(ON_THE_HOUR, UNDER_CAPACITY, CUSTOMER)
+    booking_scheduler.add_schedule(schedule)
+    booking_scheduler.set_sms_sender(orig_sender)
+    assert mock_sender.send.call_count == 1
 
+def test_예약완료시_SMS는_무조건_발송(mocker, booking_scheduler_with_mock_sender):
+    booking_scheduler, sender = booking_scheduler_with_mock_sender
+    schedule = Schedule(ON_THE_HOUR, UNDER_CAPACITY, CUSTOMER)
+    booking_scheduler.add_schedule(schedule)
+    assert sender.send_called
 
-def test_이메일이_없는_경우에는_이메일_미발송():
-    pass
+def test_이메일이_없는_경우에는_이메일_미발송(mocker, booking_scheduler):
+    orig_sender = booking_scheduler.sms_sender
+    mock_sender = mocker.Mock(spec=SmsSender)
+    booking_scheduler.set_sms_sender(mock_sender)
+    schedule = Schedule(ON_THE_HOUR, UNDER_CAPACITY, CUSTOMER)
+    booking_scheduler.add_schedule(schedule)
+    booking_scheduler.set_sms_sender(orig_sender)
+    assert mock_sender.send.call_count == 1
 
 
 def test_이메일이_있는_경우에는_이메일_발송():
