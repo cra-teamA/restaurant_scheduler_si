@@ -4,13 +4,14 @@ from datetime import datetime, timedelta
 from schedule import Customer, Schedule
 from communication import SmsSender, MailSender
 from booking_scheduler import BookingScheduler
-from double import MockBookingScheduler
 
 UNDER_CAPACITY = 1
 CAPACITY_PER_HOUR = 3
 ON_THE_HOUR = datetime.strptime('2025-08-01 00:00', '%Y-%m-%d %H:%M')
 NOT_ON_THE_HOUR = datetime.strptime('2025-08-01 00:01', '%Y-%m-%d %H:%M')
 
+SUNDAY = datetime.strptime('2025-08-03 00:00', '%Y-%m-%d %H:%M')
+MONDAY = datetime.strptime('2025-08-04 00:00', '%Y-%m-%d %H:%M')
 
 @pytest.fixture
 def booking_scheduler():
@@ -103,16 +104,23 @@ def test_이메일이_있는_경우에는_이메일_발송(booking_scheduler_wit
     sender.send_mail.assert_called()
 
 
-def test_현재날짜가_일요일인_경우_예약불가_예외처리(customer):
-    booking_scheduler = MockBookingScheduler(CAPACITY_PER_HOUR, '2025-08-03 00:00')
+def test_현재날짜가_일요일인_경우_예약불가_예외처리(mocker, customer):
+    mock_get_now = mocker.patch(
+        'booking_scheduler.BookingScheduler.get_now',
+        return_value = SUNDAY
+    )
+    booking_scheduler = BookingScheduler(CAPACITY_PER_HOUR)
     schedule = Schedule(ON_THE_HOUR, UNDER_CAPACITY, customer)
     with pytest.raises(ValueError):
         booking_scheduler.add_schedule(schedule)
 
 
-def test_현재날짜가_일요일이_아닌경우_예약가능(customer):
-    booking_scheduler = MockBookingScheduler(CAPACITY_PER_HOUR, '2025-08-04 00:00')
+def test_현재날짜가_일요일이_아닌경우_예약가능(mocker, customer):
+    mock_get_now = mocker.patch(
+        'booking_scheduler.BookingScheduler.get_now',
+        return_value = MONDAY
+    )
+    booking_scheduler = BookingScheduler(CAPACITY_PER_HOUR)
     schedule = Schedule(ON_THE_HOUR, UNDER_CAPACITY, customer)
     booking_scheduler.add_schedule(schedule)
-
     assert booking_scheduler.has_schedule(schedule)
