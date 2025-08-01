@@ -1,14 +1,25 @@
 import pytest
+from pytest_mock import MockerFixture as mocker
 
+from datetime import datetime
 from schedule import Customer, Schedule
 from communication import SmsSender, MailSender
 from booking_scheduler import BookingScheduler
 
-def test_예약은_정시에만_가능하다_정시가_아닌경우_예약불가():
-    pass
+def test_예약은_정시에만_가능하다_정시가_아닌경우_예약불가(mocker):
+    scheduler = BookingScheduler(3)
+    time = datetime.strptime('2025-08-01 00:01', '%Y-%m-%d %H:%M')
+    customer = Customer('a', '1', 'a')
+    with pytest.raises(ValueError):
+        scheduler.add_schedule(Schedule(time, 1, customer))
 
 def test_예약은_정시에만_가능하다_정시인_경우_예약가능():
-    pass
+    scheduler = BookingScheduler(3)
+    time = datetime.strptime('2025-08-01 00:00', '%Y-%m-%d %H:%M')
+    customer = Customer('a', '1', 'a')
+
+    scheduler.add_schedule(Schedule(time, 1, customer))
+    assert len(scheduler.schedules) == 1
 
 def test_시간대별_인원제한이_있다_같은_시간대에_Capacity_초과할_경우_예외발생():
     pass
