@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from schedule import Customer, Schedule
 from communication import SmsSender, MailSender
 from booking_scheduler import BookingScheduler
-from double import MockSmsSender, MockMailSender, SundayBookingScheduler, MondayBookingScheduler
+from double import MockSmsSender, MockMailSender, MockBookingScheduler
 
 UNDER_CAPACITY = 1
 CAPACITY_PER_HOUR = 3
@@ -86,7 +86,7 @@ def test_이메일이_있는_경우에는_이메일_발송(booking_scheduler_wit
 
 
 def test_현재날짜가_일요일인_경우_예약불가_예외처리():
-    booking_scheduler = SundayBookingScheduler(CAPACITY_PER_HOUR)
+    booking_scheduler = MockBookingScheduler(CAPACITY_PER_HOUR, '2025-08-03 00:00')
     schedule = Schedule(ON_THE_HOUR, UNDER_CAPACITY, CUSTOMER)
     with pytest.raises(ValueError):
         booking_scheduler.add_schedule(schedule)
@@ -94,7 +94,7 @@ def test_현재날짜가_일요일인_경우_예약불가_예외처리():
 
 
 def test_현재날짜가_일요일이_아닌경우_예약가능():
-    booking_scheduler = MondayBookingScheduler(CAPACITY_PER_HOUR)
+    booking_scheduler = MockBookingScheduler(CAPACITY_PER_HOUR, '2025-08-04 00:00')
     schedule = Schedule(ON_THE_HOUR, UNDER_CAPACITY, CUSTOMER)
     booking_scheduler.add_schedule(schedule)
 

@@ -26,19 +26,9 @@ class MockMailSender(MailSender):
     @property
     def send_mail_count(self) -> int:
         return self._send_mail_count
-class MockScheduler(BookingScheduler):
+class MockBookingScheduler(BookingScheduler):
     def __init__(self, capacity_per_hour, datetime_str):
         super().__init__(capacity_per_hour)
         self._datetime_str = datetime_str
     def get_now(self):
         return datetime.strptime(self._datetime_str, '%Y-%m-%d %H:%M')
-class SundayBookingScheduler(BookingScheduler):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-    def get_now(self):
-        return datetime.strptime('2025-08-03 00:00', '%Y-%m-%d %H:%M')
-class MondayBookingScheduler(BookingScheduler):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-    def get_now(self):
-        return datetime.strptime('2025-08-04 00:00', '%Y-%m-%d %H:%M')
